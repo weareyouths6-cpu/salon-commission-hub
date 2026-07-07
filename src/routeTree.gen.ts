@@ -9,38 +9,212 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedStylistsRouteImport } from './routes/_authenticated/stylists'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedRecalculateRouteImport } from './routes/_authenticated/recalculate'
+import { Route as AuthenticatedPayrollRouteImport } from './routes/_authenticated/payroll'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCommissionsRouteImport } from './routes/_authenticated/commissions'
+import { Route as AuthenticatedAuditRouteImport } from './routes/_authenticated/audit'
+import { Route as AuthenticatedAssistantsRouteImport } from './routes/_authenticated/assistants'
+import { Route as AuthenticatedStylistsIdRouteImport } from './routes/_authenticated/stylists.$id'
+import { Route as AuthenticatedAssistantsIdRouteImport } from './routes/_authenticated/assistants.$id'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedStylistsRoute = AuthenticatedStylistsRouteImport.update({
+  id: '/stylists',
+  path: '/stylists',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRecalculateRoute =
+  AuthenticatedRecalculateRouteImport.update({
+    id: '/recalculate',
+    path: '/recalculate',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPayrollRoute = AuthenticatedPayrollRouteImport.update({
+  id: '/payroll',
+  path: '/payroll',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCommissionsRoute =
+  AuthenticatedCommissionsRouteImport.update({
+    id: '/commissions',
+    path: '/commissions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAuditRoute = AuthenticatedAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAssistantsRoute = AuthenticatedAssistantsRouteImport.update({
+  id: '/assistants',
+  path: '/assistants',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStylistsIdRoute = AuthenticatedStylistsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedStylistsRoute,
+} as any)
+const AuthenticatedAssistantsIdRoute =
+  AuthenticatedAssistantsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAssistantsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/assistants': typeof AuthenticatedAssistantsRouteWithChildren
+  '/audit': typeof AuthenticatedAuditRoute
+  '/commissions': typeof AuthenticatedCommissionsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/payroll': typeof AuthenticatedPayrollRoute
+  '/recalculate': typeof AuthenticatedRecalculateRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/stylists': typeof AuthenticatedStylistsRouteWithChildren
+  '/assistants/$id': typeof AuthenticatedAssistantsIdRoute
+  '/stylists/$id': typeof AuthenticatedStylistsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/assistants': typeof AuthenticatedAssistantsRouteWithChildren
+  '/audit': typeof AuthenticatedAuditRoute
+  '/commissions': typeof AuthenticatedCommissionsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/payroll': typeof AuthenticatedPayrollRoute
+  '/recalculate': typeof AuthenticatedRecalculateRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/stylists': typeof AuthenticatedStylistsRouteWithChildren
+  '/assistants/$id': typeof AuthenticatedAssistantsIdRoute
+  '/stylists/$id': typeof AuthenticatedStylistsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/assistants': typeof AuthenticatedAssistantsRouteWithChildren
+  '/_authenticated/audit': typeof AuthenticatedAuditRoute
+  '/_authenticated/commissions': typeof AuthenticatedCommissionsRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/payroll': typeof AuthenticatedPayrollRoute
+  '/_authenticated/recalculate': typeof AuthenticatedRecalculateRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/stylists': typeof AuthenticatedStylistsRouteWithChildren
+  '/_authenticated/assistants/$id': typeof AuthenticatedAssistantsIdRoute
+  '/_authenticated/stylists/$id': typeof AuthenticatedStylistsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/assistants'
+    | '/audit'
+    | '/commissions'
+    | '/dashboard'
+    | '/payroll'
+    | '/recalculate'
+    | '/reports'
+    | '/settings'
+    | '/stylists'
+    | '/assistants/$id'
+    | '/stylists/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/assistants'
+    | '/audit'
+    | '/commissions'
+    | '/dashboard'
+    | '/payroll'
+    | '/recalculate'
+    | '/reports'
+    | '/settings'
+    | '/stylists'
+    | '/assistants/$id'
+    | '/stylists/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/assistants'
+    | '/_authenticated/audit'
+    | '/_authenticated/commissions'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/payroll'
+    | '/_authenticated/recalculate'
+    | '/_authenticated/reports'
+    | '/_authenticated/settings'
+    | '/_authenticated/stylists'
+    | '/_authenticated/assistants/$id'
+    | '/_authenticated/stylists/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +222,144 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/stylists': {
+      id: '/_authenticated/stylists'
+      path: '/stylists'
+      fullPath: '/stylists'
+      preLoaderRoute: typeof AuthenticatedStylistsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recalculate': {
+      id: '/_authenticated/recalculate'
+      path: '/recalculate'
+      fullPath: '/recalculate'
+      preLoaderRoute: typeof AuthenticatedRecalculateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payroll': {
+      id: '/_authenticated/payroll'
+      path: '/payroll'
+      fullPath: '/payroll'
+      preLoaderRoute: typeof AuthenticatedPayrollRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/commissions': {
+      id: '/_authenticated/commissions'
+      path: '/commissions'
+      fullPath: '/commissions'
+      preLoaderRoute: typeof AuthenticatedCommissionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/audit': {
+      id: '/_authenticated/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuthenticatedAuditRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assistants': {
+      id: '/_authenticated/assistants'
+      path: '/assistants'
+      fullPath: '/assistants'
+      preLoaderRoute: typeof AuthenticatedAssistantsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stylists/$id': {
+      id: '/_authenticated/stylists/$id'
+      path: '/$id'
+      fullPath: '/stylists/$id'
+      preLoaderRoute: typeof AuthenticatedStylistsIdRouteImport
+      parentRoute: typeof AuthenticatedStylistsRoute
+    }
+    '/_authenticated/assistants/$id': {
+      id: '/_authenticated/assistants/$id'
+      path: '/$id'
+      fullPath: '/assistants/$id'
+      preLoaderRoute: typeof AuthenticatedAssistantsIdRouteImport
+      parentRoute: typeof AuthenticatedAssistantsRoute
+    }
   }
 }
 
+interface AuthenticatedAssistantsRouteChildren {
+  AuthenticatedAssistantsIdRoute: typeof AuthenticatedAssistantsIdRoute
+}
+
+const AuthenticatedAssistantsRouteChildren: AuthenticatedAssistantsRouteChildren =
+  {
+    AuthenticatedAssistantsIdRoute: AuthenticatedAssistantsIdRoute,
+  }
+
+const AuthenticatedAssistantsRouteWithChildren =
+  AuthenticatedAssistantsRoute._addFileChildren(
+    AuthenticatedAssistantsRouteChildren,
+  )
+
+interface AuthenticatedStylistsRouteChildren {
+  AuthenticatedStylistsIdRoute: typeof AuthenticatedStylistsIdRoute
+}
+
+const AuthenticatedStylistsRouteChildren: AuthenticatedStylistsRouteChildren = {
+  AuthenticatedStylistsIdRoute: AuthenticatedStylistsIdRoute,
+}
+
+const AuthenticatedStylistsRouteWithChildren =
+  AuthenticatedStylistsRoute._addFileChildren(
+    AuthenticatedStylistsRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAssistantsRoute: typeof AuthenticatedAssistantsRouteWithChildren
+  AuthenticatedAuditRoute: typeof AuthenticatedAuditRoute
+  AuthenticatedCommissionsRoute: typeof AuthenticatedCommissionsRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPayrollRoute: typeof AuthenticatedPayrollRoute
+  AuthenticatedRecalculateRoute: typeof AuthenticatedRecalculateRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStylistsRoute: typeof AuthenticatedStylistsRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAssistantsRoute: AuthenticatedAssistantsRouteWithChildren,
+  AuthenticatedAuditRoute: AuthenticatedAuditRoute,
+  AuthenticatedCommissionsRoute: AuthenticatedCommissionsRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPayrollRoute: AuthenticatedPayrollRoute,
+  AuthenticatedRecalculateRoute: AuthenticatedRecalculateRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedStylistsRoute: AuthenticatedStylistsRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
