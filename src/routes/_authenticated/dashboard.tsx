@@ -6,7 +6,7 @@ import { DollarSign, TrendingUp, Users, Scissors, Clock, Calendar } from "lucide
 import { fmtMMK } from "@/lib/format";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from "recharts";
 
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
