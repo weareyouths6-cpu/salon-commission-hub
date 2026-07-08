@@ -27,16 +27,12 @@ function PayrollPage() {
     queryKey: ["payrolls", month, year],
     queryFn: async () => {
       const { data: payrolls } = await supabase.from("payrolls").select("*").eq("month", month).eq("year", year);
-      const stIds = (payrolls ?? []).filter((p) => p.employee_role === "stylist").map((p) => p.employee_id);
-      const asIds = (payrolls ?? []).filter((p) => p.employee_role === "assistant").map((p) => p.employee_id);
-      const [stR, asR] = await Promise.all([
-        stIds.length ? supabase.from("stylists").select("id, name").in("id", stIds) : Promise.resolve({ data: [] as any[] }),
-        asIds.length ? supabase.from("assistants").select("id, name").in("id", asIds) : Promise.resolve({ data: [] as any[] }),
-      ]);
-      const nameMap = new Map<string, string>();
-      (stR.data ?? []).forEach((x: any) => nameMap.set(`stylist::${x.id}`, x.name));
-      (asR.data ?? []).forEach((x: any) => nameMap.set(`assistant::${x.id}`, x.name));
-      return (payrolls ?? []).map((p) => ({ ...p, name: nameMap.get(`${p.employee_role}::${p.employee_id}`) ?? "Unknown" }));
+      const ids = [...new Set((payrolls ?? []).map((p) => p.employee_id))];
+      const { data: profs } = ids.length
+        ? await supabase.from("profiles").select("id, name, email").in("id", ids)
+        : { data: [] as any[] };
+      const nameMap = new Map<string, string>((profs ?? []).map((p: any) => [p.id, p.name ?? p.email ?? "—"]));
+      return (payrolls ?? []).map((p) => ({ ...p, name: nameMap.get(p.employee_id) ?? "Unknown" }));
     },
   });
 
@@ -87,7 +83,7 @@ function PayrollPage() {
                   <td className="px-3 py-2"><Input defaultValue={p.remarks ?? ""} className="max-w-[160px]" onBlur={(e) => upd.mutate({ id: p.id, remarks: e.target.value })} /></td>
                   <td className="px-3 py-2">
                     {p.payment_status === "paid" ? (
-                      <Button size="sm" variant="outline" onClick={() => upd.mutate({ id: p.id, payment_status: "unpaid" })}>Unmark</Button>
+                      <Button size="sm" variant="outline" onClick={() => upd.mutate({ id: p.id, payment_status: "pending" })}>Unmark</Button>
                     ) : (
                       <Button size="sm" onClick={() => upd.mutate({ id: p.id, payment_status: "paid" })}>Mark Paid</Button>
                     )}

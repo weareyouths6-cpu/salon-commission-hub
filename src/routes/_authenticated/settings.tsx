@@ -37,7 +37,7 @@ function SettingsPage() {
 
   const save = useMutation({
     mutationFn: () => updFn({ data: { updates: rows } }),
-    onSuccess: () => { toast.success("Settings saved. New invoices will use these values."); qc.invalidateQueries(); },
+    onSuccess: () => { toast.success("Settings saved. New records will use these values."); qc.invalidateQueries(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -51,13 +51,13 @@ function SettingsPage() {
     <div className="p-8 space-y-4">
       <div>
         <h1 className="text-2xl font-semibold">Commission Settings</h1>
-        <p className="text-sm text-muted-foreground">Changes affect future calculations only. Existing records are preserved.</p>
+        <p className="text-sm text-muted-foreground">Changes affect future calculations only. Existing records are preserved (use Recalculate to overwrite).</p>
       </div>
       <Card>
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase text-slate-600">
-              <tr><th className="px-4 py-2">Category</th><th className="px-4 py-2">Stylist %</th><th className="px-4 py-2">Assistant %</th></tr>
+              <tr><th className="px-4 py-2">Category</th><th className="px-4 py-2">Stylist %</th><th className="px-4 py-2">Staff %</th></tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (

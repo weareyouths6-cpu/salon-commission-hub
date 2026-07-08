@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fmtMMK, fmtDate, CATEGORY_LABEL } from "@/lib/format";
+import { fmtMMK, fmtDate, CATEGORY_LABEL, SOURCE_LABEL } from "@/lib/format";
 import { exportCSV, exportXLSX, exportPDF } from "@/lib/exports";
 import { Download } from "lucide-react";
 
@@ -26,27 +26,30 @@ function ReportsPage() {
     queryFn: async () => {
       const { data: recs } = await supabase
         .from("commission_records")
-        .select(`*, invoice:invoices(invoice_no, customer:customers(name))`)
-        .gte("invoice_date", fromDate).lte("invoice_date", toDate)
-        .order("invoice_date", { ascending: false });
-      const stIds = [...new Set((recs ?? []).filter((r) => r.employee_role === "stylist").map((r) => r.employee_id))];
-      const asIds = [...new Set((recs ?? []).filter((r) => r.employee_role === "assistant").map((r) => r.employee_id))];
-      const [stR, asR] = await Promise.all([
-        stIds.length ? supabase.from("stylists").select("id, name").in("id", stIds) : Promise.resolve({ data: [] as any[] }),
-        asIds.length ? supabase.from("assistants").select("id, name").in("id", asIds) : Promise.resolve({ data: [] as any[] }),
+        .select("*")
+        .gte("event_date", fromDate).lte("event_date", toDate + "T23:59:59")
+        .order("event_date", { ascending: false });
+      const empIds = [...new Set((recs ?? []).map((r) => r.employee_id))];
+      const cpIds = [...new Set((recs ?? []).map((r) => r.customer_package_id).filter(Boolean) as string[])];
+      const [profR, cpR] = await Promise.all([
+        empIds.length ? supabase.from("profiles").select("id, name, email").in("id", empIds) : Promise.resolve({ data: [] as any[] }),
+        cpIds.length ? supabase.from("customer_packages").select("id, package:packages(name)").in("id", cpIds) : Promise.resolve({ data: [] as any[] }),
       ]);
-      const nm = new Map<string, string>();
-      (stR.data ?? []).forEach((x: any) => nm.set(`stylist::${x.id}`, x.name));
-      (asR.data ?? []).forEach((x: any) => nm.set(`assistant::${x.id}`, x.name));
-      return (recs ?? []).map((r) => ({ ...r, employee_name: nm.get(`${r.employee_role}::${r.employee_id}`) ?? "" }));
+      const nm = new Map<string, string>((profR.data ?? []).map((p: any) => [p.id, p.name ?? p.email ?? ""]));
+      const pm = new Map<string, string>((cpR.data ?? []).map((c: any) => [c.id, c.package?.name ?? ""]));
+      return (recs ?? []).map((r) => ({
+        ...r,
+        employee_name: nm.get(r.employee_id) ?? "",
+        package_name: r.customer_package_id ? pm.get(r.customer_package_id) ?? "" : "",
+      }));
     },
   });
 
   const total = (q.data ?? []).reduce((a, r) => a + Number(r.commission_amount), 0);
 
   const rows = (q.data ?? []).map((r) => ({
-    Date: r.invoice_date, Invoice: r.invoice?.invoice_no, Customer: r.invoice?.customer?.name ?? "",
-    Employee: r.employee_name, Role: r.employee_role,
+    Date: fmtDate(r.event_date), Source: SOURCE_LABEL[r.source_type] ?? r.source_type,
+    Package: r.package_name, Employee: r.employee_name, Role: r.employee_role,
     Category: CATEGORY_LABEL[r.category] ?? r.category,
     Sale: r.sale_amount, "%": r.commission_percent, Commission: r.commission_amount,
   }));
@@ -86,14 +89,14 @@ function ReportsPage() {
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase text-slate-600">
-              <tr>{["Date","Invoice","Customer","Employee","Role","Category","Sale","%","Commission"].map((h) => <th key={h} className="px-3 py-2">{h}</th>)}</tr>
+              <tr>{["Date","Source","Package","Employee","Role","Category","Sale","%","Commission"].map((h) => <th key={h} className="px-3 py-2">{h}</th>)}</tr>
             </thead>
             <tbody>
               {(q.data ?? []).map((r) => (
                 <tr key={r.id} className="border-t">
-                  <td className="px-3 py-2">{fmtDate(r.invoice_date)}</td>
-                  <td className="px-3 py-2">{r.invoice?.invoice_no}</td>
-                  <td className="px-3 py-2">{r.invoice?.customer?.name}</td>
+                  <td className="px-3 py-2">{fmtDate(r.event_date)}</td>
+                  <td className="px-3 py-2">{SOURCE_LABEL[r.source_type] ?? r.source_type}</td>
+                  <td className="px-3 py-2">{r.package_name}</td>
                   <td className="px-3 py-2">{r.employee_name}</td>
                   <td className="px-3 py-2 capitalize">{r.employee_role}</td>
                   <td className="px-3 py-2">{CATEGORY_LABEL[r.category]}</td>

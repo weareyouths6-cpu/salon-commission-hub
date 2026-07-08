@@ -1,24 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { fmtMMK } from "@/lib/format";
 import { ChevronRight } from "lucide-react";
-import { buildEmployeeSummary } from "./stylists";
+import { buildEmployeeSummary } from "@/lib/employee-summary";
 
 export const Route = createFileRoute("/_authenticated/assistants")({
-  component: AssistantsPage,
+  component: StaffPage,
 });
 
-function AssistantsPage() {
+function StaffPage() {
   const q = useQuery({
-    queryKey: ["assistant-summary"],
-    queryFn: () => buildEmployeeSummary("assistants", "assistant"),
+    queryKey: ["staff-summary"],
+    queryFn: () => buildEmployeeSummary(supabase, "staff"),
   });
+
   return (
     <div className="p-8 space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">Assistants</h1>
-        <p className="text-sm text-muted-foreground">Commission summary per assistant / staff</p>
+        <h1 className="text-2xl font-semibold">Staff</h1>
+        <p className="text-sm text-muted-foreground">Commission summary per staff member</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {(q.data ?? []).map((s) => (
@@ -30,16 +32,30 @@ function AssistantsPage() {
                   <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div><div className="text-xs text-muted-foreground">Today</div><div className="font-medium">{fmtMMK(s.today)}</div></div>
-                  <div><div className="text-xs text-muted-foreground">This Month</div><div className="font-medium">{fmtMMK(s.thisMonth)}</div></div>
-                  <div><div className="text-xs text-muted-foreground">Total Comm.</div><div className="font-medium">{fmtMMK(s.total)}</div></div>
-                  <div><div className="text-xs text-muted-foreground">Invoices</div><div className="font-medium">{s.invoices}</div></div>
+                  <Stat label="Today" v={s.today} />
+                  <Stat label="This Month" v={s.thisMonth} />
+                  <Stat label="Last Month" v={s.lastMonth} />
+                  <Stat label="Total Sales" v={s.totalSales} />
+                  <Stat label="Sessions" v={String(s.sessions)} plain />
+                  <Stat label="Total Comm." v={s.total} />
                 </div>
               </CardContent>
             </Card>
           </Link>
         ))}
+        {!q.data?.length && (
+          <div className="col-span-full text-center py-16 text-muted-foreground">No staff found.</div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function Stat({ label, v, plain }: { label: string; v: string | number; plain?: boolean }) {
+  return (
+    <div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="font-medium">{plain ? v : fmtMMK(v as number)}</div>
     </div>
   );
 }

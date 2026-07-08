@@ -20,3 +20,8 @@ export const CATEGORY_LABEL: Record<string, string> = {
   ginseng_box: "Ginseng Box",
   freedom: "Freedom",
 };
+
+export const SOURCE_LABEL: Record<string, string> = {
+  sale: "Package Sale",
+  session: "Session Used",
+};
