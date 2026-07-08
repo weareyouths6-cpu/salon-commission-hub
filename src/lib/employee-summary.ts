@@ -1,4 +1,10 @@
-export async function buildEmployeeSummary(supabase: any, role: "stylist" | "staff") {
+export type EmployeeSummaryRow = {
+  id: string; name: string;
+  today: number; thisMonth: number; lastMonth: number;
+  total: number; totalSales: number; sessions: number;
+};
+
+export async function buildEmployeeSummary(supabase: any, role: "stylist" | "staff"): Promise<EmployeeSummaryRow[]> {
   // employees = users with matching user_roles.role
   const { data: rolesRows } = await supabase.from("user_roles").select("user_id").eq("role", role);
   const ids = (rolesRows ?? []).map((r: any) => r.user_id);
