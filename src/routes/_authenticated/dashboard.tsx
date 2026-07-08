@@ -11,27 +11,36 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const today = new Date().toISOString().slice(0, 10);
-  const monthStart = today.slice(0, 8) + "01";
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
   const stats = useQuery({
-    queryKey: ["dashboard-stats", today],
+    queryKey: ["dashboard-stats", todayStart],
     queryFn: async () => {
-      const [invToday, cToday, cMonth, staffCnt, stylCnt, pending] = await Promise.all([
-        supabase.from("invoices").select("total").eq("invoice_date", today),
-        supabase.from("commission_records").select("commission_amount").eq("invoice_date", today),
-        supabase.from("commission_records").select("commission_amount").gte("invoice_date", monthStart),
-        supabase.from("assistants").select("id", { count: "exact", head: true }),
-        supabase.from("stylists").select("id", { count: "exact", head: true }),
-        supabase.from("invoices").select("total").eq("payment_status", "pending"),
+      const [salesToday, cToday, cMonth, staffRoles, stylRoles, unpaid] = await Promise.all([
+        // Today's package sales
+        supabase.from("customer_packages")
+          .select("package:packages(price)")
+          .gte("purchase_date", todayStart).lt("purchase_date", tomorrowStart),
+        supabase.from("commission_records").select("commission_amount")
+          .gte("event_date", todayStart).lt("event_date", tomorrowStart),
+        supabase.from("commission_records").select("commission_amount")
+          .gte("event_date", monthStart),
+        supabase.from("user_roles").select("user_id", { count: "exact", head: true }).eq("role", "staff"),
+        supabase.from("user_roles").select("user_id", { count: "exact", head: true }).eq("role", "stylist"),
+        supabase.from("payrolls").select("net_pay").eq("payment_status", "pending"),
       ]);
+      const todaysSales = ((salesToday.data ?? []) as any[])
+        .reduce((a, r) => a + Number(r.package?.price ?? 0), 0);
       return {
-        todaysSales: (invToday.data ?? []).reduce((a, r) => a + Number(r.total), 0),
+        todaysSales,
         todaysCommission: (cToday.data ?? []).reduce((a, r) => a + Number(r.commission_amount), 0),
         monthlyCommission: (cMonth.data ?? []).reduce((a, r) => a + Number(r.commission_amount), 0),
-        totalStaff: staffCnt.count ?? 0,
-        totalStylists: stylCnt.count ?? 0,
-        pendingPayment: (pending.data ?? []).reduce((a, r) => a + Number(r.total), 0),
+        totalStaff: staffRoles.count ?? 0,
+        totalStylists: stylRoles.count ?? 0,
+        pendingPayment: (unpaid.data ?? []).reduce((a, r) => a + Number(r.net_pay), 0),
       };
     },
   });
@@ -41,20 +50,24 @@ function Dashboard() {
     queryFn: async () => {
       const { data: cr } = await supabase
         .from("commission_records")
-        .select("invoice_date, commission_amount, employee_id, employee_role");
-      const { data: inv } = await supabase.from("invoices").select("invoice_date, total");
-      const { data: stylists } = await supabase.from("stylists").select("id, name");
-      const { data: assistants } = await supabase.from("assistants").select("id, name");
+        .select("event_date, commission_amount, employee_id, employee_role");
+      const { data: cps } = await supabase.from("customer_packages")
+        .select("purchase_date, package:packages(price)");
+      const { data: profiles } = await supabase.from("profiles").select("id, name");
+      const { data: roles } = await supabase.from("user_roles").select("user_id, role").in("role", ["stylist", "staff"]);
+      const nameMap = new Map<string, string>((profiles ?? []).map((p) => [p.id, p.name ?? ""]));
+      const stylistIds = new Set((roles ?? []).filter((r) => r.role === "stylist").map((r) => r.user_id));
+      const staffIds = new Set((roles ?? []).filter((r) => r.role === "staff").map((r) => r.user_id));
 
       const monthlyMap = new Map<string, { sales: number; commission: number }>();
-      for (const r of inv ?? []) {
-        const m = r.invoice_date.slice(0, 7);
+      for (const r of cps ?? []) {
+        const m = (r.purchase_date ?? "").slice(0, 7);
         const c = monthlyMap.get(m) ?? { sales: 0, commission: 0 };
-        c.sales += Number(r.total);
+        c.sales += Number((r as any).package?.price ?? 0);
         monthlyMap.set(m, c);
       }
       for (const r of cr ?? []) {
-        const m = r.invoice_date.slice(0, 7);
+        const m = (r.event_date ?? "").slice(0, 7);
         const c = monthlyMap.get(m) ?? { sales: 0, commission: 0 };
         c.commission += Number(r.commission_amount);
         monthlyMap.set(m, c);
@@ -65,17 +78,16 @@ function Dashboard() {
 
       const totalByEmployee = new Map<string, number>();
       for (const r of cr ?? []) {
-        const k = `${r.employee_role}::${r.employee_id}`;
-        totalByEmployee.set(k, (totalByEmployee.get(k) ?? 0) + Number(r.commission_amount));
+        totalByEmployee.set(r.employee_id, (totalByEmployee.get(r.employee_id) ?? 0) + Number(r.commission_amount));
       }
-      const topStylists = (stylists ?? [])
-        .map((s) => ({ name: s.name, total: totalByEmployee.get(`stylist::${s.id}`) ?? 0 }))
+      const topStylists = Array.from(stylistIds)
+        .map((id) => ({ name: nameMap.get(id) ?? "—", total: totalByEmployee.get(id) ?? 0 }))
         .sort((a, b) => b.total - a.total).slice(0, 5);
-      const topAssistants = (assistants ?? [])
-        .map((s) => ({ name: s.name, total: totalByEmployee.get(`assistant::${s.id}`) ?? 0 }))
+      const topStaff = Array.from(staffIds)
+        .map((id) => ({ name: nameMap.get(id) ?? "—", total: totalByEmployee.get(id) ?? 0 }))
         .sort((a, b) => b.total - a.total).slice(0, 5);
 
-      return { monthly, topStylists, topAssistants };
+      return { monthly, topStylists, topStaff };
     },
   });
 
@@ -94,7 +106,7 @@ function Dashboard() {
         <KpiCard icon={Calendar} label="Monthly Commission" value={fmtMMK(s?.monthlyCommission ?? 0)} color="bg-indigo-500" />
         <KpiCard icon={Users} label="Total Staff" value={String(s?.totalStaff ?? 0)} color="bg-amber-500" />
         <KpiCard icon={Scissors} label="Total Stylists" value={String(s?.totalStylists ?? 0)} color="bg-rose-500" />
-        <KpiCard icon={Clock} label="Pending Payment" value={fmtMMK(s?.pendingPayment ?? 0)} color="bg-slate-600" />
+        <KpiCard icon={Clock} label="Pending Payroll" value={fmtMMK(s?.pendingPayment ?? 0)} color="bg-slate-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -140,10 +152,10 @@ function Dashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>Top Assistants</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Top Staff</CardTitle></CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={charts.data?.topAssistants ?? []} layout="vertical">
+              <BarChart data={charts.data?.topStaff ?? []} layout="vertical">
                 <XAxis type="number" tickFormatter={(v) => (v / 1000).toFixed(0) + "K"} />
                 <YAxis type="category" dataKey="name" width={80} />
                 <Tooltip formatter={(v: number) => fmtMMK(v)} />
