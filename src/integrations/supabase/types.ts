@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      assistants: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       commission_audit_log: {
         Row: {
           action: string
@@ -59,44 +80,56 @@ export type Database = {
           commission_amount: number
           commission_percent: number
           created_at: string
-          customer_package_id: string | null
           employee_id: string
           employee_role: string
-          event_date: string
           id: string
+          invoice_date: string
+          invoice_id: string
+          invoice_item_id: string
           sale_amount: number
-          source_type: string
-          usage_log_id: string | null
         }
         Insert: {
           category: string
           commission_amount: number
           commission_percent: number
           created_at?: string
-          customer_package_id?: string | null
           employee_id: string
           employee_role: string
-          event_date: string
           id?: string
+          invoice_date: string
+          invoice_id: string
+          invoice_item_id: string
           sale_amount: number
-          source_type: string
-          usage_log_id?: string | null
         }
         Update: {
           category?: string
           commission_amount?: number
           commission_percent?: number
           created_at?: string
-          customer_package_id?: string | null
           employee_id?: string
           employee_role?: string
-          event_date?: string
           id?: string
+          invoice_date?: string
+          invoice_id?: string
+          invoice_item_id?: string
           sale_amount?: number
-          source_type?: string
-          usage_log_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "commission_records_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_records_invoice_item_id_fkey"
+            columns: ["invoice_item_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       commission_settings: {
         Row: {
@@ -112,8 +145,8 @@ export type Database = {
           category: string
           created_at?: string
           id?: string
-          staff_percent?: number
-          stylist_percent?: number
+          staff_percent: number
+          stylist_percent: number
           updated_at?: string
           updated_by?: string | null
         }
@@ -133,42 +166,40 @@ export type Database = {
           customer_id: string
           deposit_paid: boolean
           deposit_paid_at: string | null
-          deposit_sessions_paid: number
           id: string
           package_id: string
           purchase_date: string
           sessions_remaining: number
           total_sessions: number
-          warranty_expires_at: string | null
-          warranty_years: number
         }
         Insert: {
           customer_id: string
           deposit_paid?: boolean
           deposit_paid_at?: string | null
-          deposit_sessions_paid?: number
           id?: string
           package_id: string
           purchase_date?: string
           sessions_remaining: number
           total_sessions: number
-          warranty_expires_at?: string | null
-          warranty_years?: number
         }
         Update: {
           customer_id?: string
           deposit_paid?: boolean
           deposit_paid_at?: string | null
-          deposit_sessions_paid?: number
           id?: string
           package_id?: string
           purchase_date?: string
           sessions_remaining?: number
           total_sessions?: number
-          warranty_expires_at?: string | null
-          warranty_years?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "customer_packages_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "customer_packages_package_id_fkey"
             columns: ["package_id"]
@@ -178,45 +209,128 @@ export type Database = {
           },
         ]
       }
-      package_promotions: {
+      customers: {
         Row: {
           created_at: string
           id: string
-          package_id: string
-          promotion_id: string
+          name: string
+          phone: string | null
         }
         Insert: {
           created_at?: string
           id?: string
-          package_id: string
-          promotion_id: string
+          name: string
+          phone?: string | null
         }
         Update: {
           created_at?: string
           id?: string
-          package_id?: string
-          promotion_id?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      invoice_items: {
+        Row: {
+          created_at: string
+          id: string
+          invoice_id: string
+          item_type: string
+          line_total: number
+          name: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invoice_id: string
+          item_type: string
+          line_total?: number
+          name: string
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          item_type?: string
+          line_total?: number
+          name?: string
+          quantity?: number
+          unit_price?: number
         }
         Relationships: [
           {
-            foreignKeyName: "package_promotions_package_id_fkey"
-            columns: ["package_id"]
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
             isOneToOne: false
-            referencedRelation: "packages"
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          assistant_id: string | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          invoice_date: string
+          invoice_no: string
+          payment_status: string
+          stylist_id: string | null
+          total: number
+        }
+        Insert: {
+          assistant_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_no: string
+          payment_status?: string
+          stylist_id?: string | null
+          total?: number
+        }
+        Update: {
+          assistant_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_no?: string
+          payment_status?: string
+          stylist_id?: string | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_assistant_id_fkey"
+            columns: ["assistant_id"]
+            isOneToOne: false
+            referencedRelation: "assistants"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "package_promotions_promotion_id_fkey"
-            columns: ["promotion_id"]
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
             isOneToOne: false
-            referencedRelation: "promotions"
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_stylist_id_fkey"
+            columns: ["stylist_id"]
+            isOneToOne: false
+            referencedRelation: "stylists"
             referencedColumns: ["id"]
           },
         ]
       }
       packages: {
         Row: {
-          category: string
           created_at: string
           description: string | null
           id: string
@@ -228,7 +342,6 @@ export type Database = {
           total_sessions: number
         }
         Insert: {
-          category?: string
           created_at?: string
           description?: string | null
           id?: string
@@ -240,7 +353,6 @@ export type Database = {
           total_sessions?: number
         }
         Update: {
-          category?: string
           created_at?: string
           description?: string | null
           id?: string
@@ -267,6 +379,7 @@ export type Database = {
           payment_status: string
           remarks: string | null
           total_commission: number
+          updated_at: string
           year: number
         }
         Insert: {
@@ -282,6 +395,7 @@ export type Database = {
           payment_status?: string
           remarks?: string | null
           total_commission?: number
+          updated_at?: string
           year: number
         }
         Update: {
@@ -297,6 +411,7 @@ export type Database = {
           payment_status?: string
           remarks?: string | null
           total_commission?: number
+          updated_at?: string
           year?: number
         }
         Relationships: []
@@ -334,45 +449,6 @@ export type Database = {
         }
         Relationships: []
       }
-      promotions: {
-        Row: {
-          created_at: string
-          description: string | null
-          discount_type: string
-          discount_value: number
-          end_date: string
-          id: string
-          is_active: boolean
-          name: string
-          start_date: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          discount_type: string
-          discount_value: number
-          end_date: string
-          id?: string
-          is_active?: boolean
-          name: string
-          start_date: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          discount_type?: string
-          discount_value?: number
-          end_date?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          start_date?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       session_staff: {
         Row: {
           created_at: string
@@ -394,6 +470,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "session_staff_staff_user_id_fkey"
+            columns: ["staff_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "session_staff_usage_log_id_fkey"
             columns: ["usage_log_id"]
             isOneToOne: false
@@ -402,26 +485,54 @@ export type Database = {
           },
         ]
       }
+      stylists: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       usage_logs: {
         Row: {
-          admin_id: string | null
+          admin_id: string
           customer_package_id: string
           id: string
           used_at: string
         }
         Insert: {
-          admin_id?: string | null
+          admin_id: string
           customer_package_id: string
           id?: string
           used_at?: string
         }
         Update: {
-          admin_id?: string | null
+          admin_id?: string
           customer_package_id?: string
           id?: string
           used_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "usage_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "usage_logs_customer_package_id_fkey"
             columns: ["customer_package_id"]
@@ -466,7 +577,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "customer" | "staff" | "stylist"
+      app_role: "admin" | "customer" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -594,7 +705,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "customer", "staff", "stylist"],
+      app_role: ["admin", "customer", "staff"],
     },
   },
 } as const
